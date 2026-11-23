@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Solicitudes de Vacaciones - Valle Grande</title>
+
+    <!-- Librería Plotly -->
+    <script src="https://cdn.plot.ly/plotly-3.3.0.min.js"></script>
+
+    <!-- Conexión con archivo CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+</head>
+
+<body>
+
+    {% if not usuario %}
+    <!-- ======================================================= -->
+    <!-- PANTALLA DE INICIO CON ESCUDO SOLO + LETRA BLANCA       -->
+    <!-- ======================================================= -->
+    <div style="min-height: 90vh; display: flex; justify-content: center; align-items: center; padding: 20px;">
+        <div class="tarjeta-kpi" style="max-width: 450px; width: 100%; text-align: center; padding: 36px 30px;">
+
+            <!-- ESCUDO SOLO + TEXTO VALLE GRANDE BLANCO -->
+            <div style="display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 20px;">
+                <div style="width: 33px; height: 76px; overflow: hidden; flex-shrink: 0;">
+                    <img src="{{ url_for('static', filename='img/logo.gif') }}" alt="Escudo Valle Grande"
+                         style="height: 76px; width: auto; max-width: none; display: block;">
+                </div>
+                <span style="color: #ffffff; font-family: Georgia, 'Times New Roman', serif; font-size: 1.75rem; letter-spacing: 2px; font-weight: 500; text-transform: uppercase;">
+                    VALLE GRANDE
+                </span>
+            </div>
+
+            <div class="badge-live" style="justify-content: center; margin-bottom: 14px;">
+                <span class="punto-verde"></span> Control de Acceso • PROSIP
+            </div>
+
+            <h2 style="font-size: 1.6rem; margin-bottom: 8px;">Portal de Vacaciones</h2>
+            <p style="margin-bottom: 22px; opacity: 0.8; font-size: 0.92rem;">Ingresa tu correo @vallegrande.edu.pe y tu N.° de DNI</p>
+
+            <form action="{{ url_for('login') }}" method="POST">
+                <input type="email" name="correo" placeholder="nombre@vallegrande.edu.pe"
+                    pattern=".+@vallegrande\.edu\.pe"
+                    title="Solo se permiten correos institucionales @vallegrande.edu.pe"
+                    required
+                    style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.25); color: #fff; margin-bottom: 14px; box-sizing: border-box;">
+
+                <input type="password" name="clave" placeholder="Contraseña (N.° de DNI)" required
+                    style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.25); color: #fff; margin-bottom: 14px; box-sizing: border-box;">
+
+                <select name="rol_elegido" required
+                    style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: #1e293b; color: #fff; margin-bottom: 18px; box-sizing: border-box; font-size: 0.95rem;">
+                    <option value="COLABORADOR">👤 Colaborador</option>
+                    <option value="JEFE">👔 Jefe</option>
+                    <option value="ADMINISTRADOR">🛡️ Administrador</option>
+                </select>
+
+                <button type="submit"
+                    style="width: 100%; padding: 12px; border-radius: 10px; border: none; background: #10B981; color: #fff; font-weight: bold; font-size: 1rem; cursor: pointer;">
+                    Ingresar al Dashboard
+                </button>
+            </form>
+
+            {% if error %}
+            <p style="color: #EF4444; margin-top: 14px; font-size: 0.9rem; font-weight: bold;">{{ error }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% else %}
+    <!-- ======================================================= -->
+    <!-- DASHBOARD PRINCIPAL CON LOGO EN BLANCO EN TODO EL PANEL -->
+    <!-- ======================================================= -->
+
+    <!-- BARRA SUPERIOR DE SESIÓN -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 24px; margin-bottom: 16px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div style="display: inline-flex; align-items: center; gap: 8px;">
+                <div style="width: 16px; height: 36px; overflow: hidden; flex-shrink: 0;">
+                    <img src="{{ url_for('static', filename='img/logo.gif') }}" alt="Valle Grande"
+                         style="height: 36px; width: auto; max-width: none; display: block;">
+                </div>
+                <span style="color: #ffffff; font-family: Georgia, 'Times New Roman', serif; font-size: 1.05rem; letter-spacing: 1.5px;">VALLE GRANDE</span>
+            </div>
+            <span>|</span>
+            <span>👤 <strong>{{ usuario }}</strong></span>
+            <span>|</span>
+            <span>Rol: <strong style="color: #10B981;">{{ rol }}</strong></span>
+        </div>
+        <a href="{{ url_for('logout') }}" style="background: #EF4444; color: #fff; padding: 6px 14px; border-radius: 8px; text-decoration: none; font-size: 0.9rem; font-weight: bold;">
+            Cambiar rol / Salir
+        </a>
+    </div>
+
+    <!-- 1. ENCABEZADO DEL DASHBOARD -->
+    <header class="encabezado">
+        <div class="encabezado-izq">
+            <div style="display: inline-flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div style="width: 27px; height: 62px; overflow: hidden; flex-shrink: 0;">
+                    <img src="{{ url_for('static', filename='img/logo.gif') }}" alt="Logo Valle Grande"
+                         style="height: 62px; width: auto; max-width: none; display: block;">
+                </div>
+                <span style="color: #ffffff; font-family: Georgia, 'Times New Roman', serif; font-size: 1.55rem; letter-spacing: 2px;">VALLE GRANDE</span>
+            </div>
+            <div class="badge-live">
+                <span class="punto-verde"></span> Automatización Activa • Google Sheets Sync
+            </div>
+            <h1>
+                {% if rol == "COLABORADOR" %}
+                    Mis Solicitudes de Vacaciones
+                {% else %}
+                    Dashboard Analítico de Vacaciones
+                {% endif %}
+            </h1>
+            <p>
+                {% if rol == "COLABORADOR" %}
+                    Consulta el estado de tus solicitudes registradas (Aceptado, Pendiente o Denegado)
+                {% else %}
+                    Monitoreo inteligente y procesamiento automático de solicitudes del personal
+                {% endif %}
+            </p>
+        </div>
+        <div class="encabezado-der">
+            <div class="pill-info">Umbral Alerta: <strong>≥ 10 días</strong></div>
+            <div class="pill-info">Vista Actual: <strong>{{ rol }}</strong></div>
+        </div>
+    </header>
+
+    <!-- 2. TARJETAS DE INDICADORES KPI -->
+    <section class="contenedor-kpis">
+
+        <div class="tarjeta-kpi">
+            <div class="kpi-top">
+                <h3>{% if rol == "COLABORADOR" %}Mis Solicitudes{% else %}Total de Solicitudes{% endif %}</h3>
+                <span class="kpi-icono icono-amarillo">📋</span>
+            </div>
+            <h2>{{ total_solicitudes }}</h2>
+            <div class="kpi-footer">
+                <p>Registros capturados en tiempo real</p>
+                <div class="barra-progreso"><div class="progreso-fill fill-amarillo" style="width: 100%;"></div></div>
+            </div>
+        </div>
+
+        <div class="tarjeta-kpi">
+            <div class="kpi-top">
+                <h3>Solicitudes Aceptadas</h3>
+                <span class="kpi-icono icono-verde">✅</span>
+            </div>
+            <h2>{{ total_aprobadas }}</h2>
+            <div class="kpi-footer">
+                <p>Aprobadas por administración</p>
+                <div class="barra-progreso"><div class="progreso-fill fill-verde" style="width: 100%;"></div></div>
+            </div>
+        </div>
+
+        <div class="tarjeta-kpi">
+            <div class="kpi-top">
+                <h3>Vacaciones Prolongadas</h3>
+                <span class="kpi-icono icono-azul">⏳</span>
+            </div>
+            <h2>{{ total_prolongadas }}</h2>
+            <div class="kpi-footer">
+                <p>Requieren revisión (10 o más días)</p>
+                <div class="barra-progreso"><div class="progreso-fill fill-azul" style="width: 25%;"></div></div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- TABLA DE DATOS DE SOLICITUDES -->
+    <section style="margin: 24px 0; background: rgba(255,255,255,0.04); padding: 24px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0;">
+                {% if rol == "COLABORADOR" %}Detalle de Mis Solicitudes{% else %}Listado General de Solicitudes{% endif %}
+            </h3>
+            <div style="display: inline-flex; align-items: center; gap: 8px;">
+                <div style="width: 14px; height: 32px; overflow: hidden; flex-shrink: 0;">
+                    <img src="{{ url_for('static', filename='img/logo.gif') }}" alt="Valle Grande"
+                         style="height: 32px; width: auto; max-width: none; display: block;">
+                </div>
+                <span style="color: #ffffff; font-family: Georgia, 'Times New Roman', serif; font-size: 0.95rem; letter-spacing: 1.5px;">VALLE GRANDE</span>
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.15);">
+                        <th style="padding: 12px;">Solicitante</th>
+                        <th style="padding: 12px;">Área</th>
+                        <th style="padding: 12px;">1ra Alternativa</th>
+                        <th style="padding: 12px;">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in mis_solicitudes %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.07);">
+                        <td style="padding: 12px;">{{ s['NOMBRES'] }} {{ s['APELLIDO PATERNO'] }}</td>
+                        <td style="padding: 12px;">{{ s['Área'] }}</td>
+                        <td style="padding: 12px;">{{ s['Fecha inicio - 1ra Alternativa'] }} al {{ s['Fecha final - 1ra Alternativa'] }}</td>
+                        <td style="padding: 12px; font-weight: bold;">
+                            {% set est = (s['ESTADO'] or 'PENDIENTE')|upper %}
+                            <span style="color: {% if est == 'ACEPTADO' %}#10B981{% elif est == 'DENEGADO' %}#EF4444{% else %}#F59E0B{% endif %};">
+                                {{ est }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="padding: 16px; text-align: center; opacity: 0.7;">No se encontraron solicitudes registradas para este usuario.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 3. FLUJO DE AUTOMATIZACIÓN VISUAL -->
+    <section class="flujo-automatizacion">
+        <div class="paso-flujo">
+            <span class="paso-num">01</span>
+            <div>
+                <strong>Captura de Datos</strong>
+                <small>Lectura directa desde Google Sheets</small>
+            </div>
+        </div>
+        <div class="flecha-flujo">➔</div>
+        <div class="paso-flujo">
+            <span class="paso-num">02</span>
+            <div>
+                <strong>Procesamiento Python</strong>
+                <small>Cálculo de promedios y alertas ≥ 10d</small>
+            </div>
+        </div>
+        <div class="flecha-flujo">➔</div>
+        <div class="paso-flujo">
+            <span class="paso-num">03</span>
+            <div>
+                <strong>Visualización Dinámica</strong>
+                <small>Renderizado interactivo con Plotly</small>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. TÍTULO DE LOS GRÁFICOS -->
+    <div class="titulo-seccion">
+        <h2>{% if rol == "COLABORADOR" %}Resumen Visual de Mis Solicitudes{% else %}Análisis General de Solicitudes{% endif %}</h2>
+        <p>Visualizaciones interactivas de la gestión de vacaciones • Valle Grande</p>
+    </div>
+
+    <!-- 5. GRÁFICOS INTERACTIVOS -->
+    <section class="contenedor-graficos">
+
+        {% if rol in ["ADMINISTRADOR", "JEFE"] %}
+        <div class="tarjeta-grafico">
+            {{ grafico1 | safe }}
+        </div>
+        {% endif %}
+
+        <div class="tarjeta-grafico">
+            {{ grafico2 | safe }}
+        </div>
+
+        {% if rol in ["ADMINISTRADOR", "JEFE"] %}
+        <div class="tarjeta-grafico">
+            {{ grafico3 | safe }}
+        </div>
+        {% endif %}
+
+        <div class="tarjeta-grafico">
+            {{ grafico4 | safe }}
+        </div>
+
+        <div class="tarjeta-grafico">
+            {{ grafico6 | safe }}
+        </div>
+
+    </section>
+
+    <!-- 6. PIE DE PÁGINA CON LOGO -->
+    <footer class="pie-pagina" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="display: inline-flex; align-items: center; gap: 10px;">
+            <div style="width: 17px; height: 38px; overflow: hidden; flex-shrink: 0;">
+                <img src="{{ url_for('static', filename='img/logo.gif') }}" alt="Valle Grande"
+                     style="height: 38px; width: auto; max-width: none; display: block;">
+            </div>
+            <span style="color: #ffffff; font-family: Georgia, 'Times New Roman', serif; font-size: 1.05rem; letter-spacing: 1.5px;">VALLE GRANDE</span>
+        </div>
+        <p>ASE262 | Programación Estructurada • Instituto Valle Grande</p>
+        <p>Proyecto Integrador - Dashboard de Vacaciones</p>
+    </footer>
+
+    {% endif %}
+
+</body>
+</html>
